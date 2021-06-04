@@ -74,10 +74,15 @@ class EscherRequest():
             return self.request['headers']
 
     def body(self):
+        b = None
         if self.type is requests.models.PreparedRequest:
-            return self.request.body or ''
+            b = self.request.body or b''
         if self.type is dict:
-            return self.request.get('body', '')
+            b = self.request.get('body', b'')
+
+        if not isinstance(b, bytes):
+            b = b.encode('utf-8')
+        return b
 
     def add_header(self, header, value):
         if self.type is requests.models.PreparedRequest:
@@ -254,7 +259,7 @@ class Escher:
             self.canonicalize_headers(req.headers(), headers_to_sign),
             '',
             self.prepare_headers_to_sign(headers_to_sign),
-            self.algo(req.body().encode('utf-8')).hexdigest()
+            self.algo(req.body()).hexdigest()
         ])
 
     def canonicalize_path(self, path):
